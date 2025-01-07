@@ -4,6 +4,11 @@ import webbrowser
 import musicLibrary
 import requests
 from datetime import datetime
+import google.generativeai as genai
+import pyjokes
+
+# In this script, you can replace "yourgeminiapikey" with your actual Google Gemini API key 
+# to get AI-generated responses using the Gemini model.
 
 # Initialize recognizer and text-to-speech engine
 recognizer = sr.Recognizer()
@@ -66,11 +71,32 @@ def processCommand(c):
         except Exception as e:
             speak(f"An error occurred: {str(e)}")
     elif "joke" in c:
-        joke = requests.get('https://v2.jokeapi.dev/joke/Any').json()
-        speak(joke['joke'])
+        joke = pyjokes.get_joke()
+        if joke:
+            speak(joke)
+        else:
+            speak("Sorry, I couldn't find a joke for you. Please try again.")
     elif "time" in c:
         currentime = datetime.now().strftime("%H:%M")
         speak(f"The current time is {currentime}")
+    elif "search" in c:
+        query = c.lower().split("search")[1].strip()
+        if query:
+            webbrowser.open(f'https://www.google.com/search?q={query}')
+        else:
+            speak("Please provide a search query.")
+    else:
+        try:
+            genai.configure(api_key="yourgeminiapikey")
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            response = model.generate_content(f"You are a desktop assistant, and {c} is your command. Please respond as a desktop assistant and dont use text decorations (astericks, underscores, etc)")
+            if response:
+                speak(response.text)
+            else:
+                speak("I could not understand that, Please try again")
+        except Exception as e:
+            speak(f"An error occurred: {str(e)}")
+
 
 if __name__ == "__main__":
     speak("Initializing Jarvis...")
